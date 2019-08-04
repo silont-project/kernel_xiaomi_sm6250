@@ -1615,3 +1615,5 @@ config MACH_XIAOMI_CUST
 endmenu
 
 endmenu
+
+source "techpack/Kconfig"
