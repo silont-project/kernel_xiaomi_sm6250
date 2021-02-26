@@ -57,3 +57,5 @@ cloc:
 -include tests/debug.mk
 
 .PHONY: all module module-debug module-install install dkms-install clean cloc check style
+
+obj-$(CONFIG_WIREGUARD)		+= src/
