@@ -4123,7 +4123,7 @@ retry_cpuset:
 			woke_kswapd = true;
 		}
 		wake_all_kswapds(order, ac);
-
+	}
 	/*
 	 * The adjusted alloc_flags might result in immediate success, so try
 	 * that first
