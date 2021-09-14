@@ -421,6 +421,21 @@ static void hdd_init_6ghz(struct hdd_context *hdd_ctx)
 	struct wiphy *wiphy = hdd_ctx->wiphy;
 	struct ieee80211_channel *chlist = hdd_channels_6_ghz;
 	uint32_t num = ARRAY_SIZE(hdd_channels_6_ghz);
+	QDF_STATUS status;
+	uint32_t band_capability;
+
+	hdd_enter();
+
+	status = ucfg_mlme_get_band_capability(hdd_ctx->psoc, &band_capability);
+	if (QDF_IS_STATUS_ERROR(status)) {
+		hdd_err("Failed to get MLME Band Capability");
+		return;
+	}
+
+	if (!(band_capability & (BIT(REG_BAND_6G)))) {
+		hdd_debug("6ghz band not enabled");
+		return;
+	}
 
 	qdf_mem_zero(chlist, sizeof(*chlist) * num);
 	for (i = 0; i < num; i++)
@@ -429,6 +444,8 @@ static void hdd_init_6ghz(struct hdd_context *hdd_ctx)
 	wiphy->bands[HDD_NL80211_BAND_6GHZ] = &wlan_hdd_band_6_ghz;
 	wiphy->bands[HDD_NL80211_BAND_6GHZ]->channels = chlist;
 	wiphy->bands[HDD_NL80211_BAND_6GHZ]->n_channels = num;
+
+	hdd_exit();
 }
 #else
 static void hdd_init_6ghz(struct hdd_context *hdd_ctx)
@@ -17507,7 +17524,7 @@ static int wlan_hdd_add_key_ibss(struct hdd_adapter *adapter,
 	if (!vdev)
 		return -EINVAL;
 	errno = wlan_cfg80211_crypto_add_key(vdev, WLAN_CRYPTO_KEY_TYPE_GROUP,
-					     key_index);
+					     key_index, false);
 	if (errno) {
 		hdd_err("add_ibss_key failed, errno: %d", errno);
 		hdd_objmgr_put_vdev(vdev);
@@ -17572,10 +17589,11 @@ static int wlan_hdd_add_key_sap(struct hdd_adapter *adapter,
 
 	if (hostapd_state->bss_state == BSS_START) {
 		errno =
-		wlan_cfg80211_crypto_add_key(vdev, (pairwise ?
-					     WLAN_CRYPTO_KEY_TYPE_UNICAST :
-					     WLAN_CRYPTO_KEY_TYPE_GROUP),
-					     key_index);
+		wlan_cfg80211_crypto_add_key(vdev,
+					     (pairwise ?
+					      WLAN_CRYPTO_KEY_TYPE_UNICAST :
+					      WLAN_CRYPTO_KEY_TYPE_GROUP),
+					     key_index, true);
 		if (!errno)
 			wma_update_set_key(adapter->vdev_id, pairwise,
 					   key_index, cipher);
@@ -17608,7 +17626,7 @@ static int wlan_hdd_add_key_sta(struct hdd_adapter *adapter,
 	errno = wlan_cfg80211_crypto_add_key(vdev, (pairwise ?
 					     WLAN_CRYPTO_KEY_TYPE_UNICAST :
 					     WLAN_CRYPTO_KEY_TYPE_GROUP),
-					     key_index);
+					     key_index, true);
 	hdd_objmgr_put_vdev(vdev);
 	if (!errno && adapter->send_mode_change) {
 		wlan_hdd_send_mode_change_event();
@@ -17994,7 +18012,7 @@ static int __wlan_hdd_cfg80211_set_default_key(struct wiphy *wiphy,
 		wlan_cfg80211_crypto_add_key(adapter->vdev, (unicast ?
 					     WLAN_CRYPTO_KEY_TYPE_UNICAST :
 					     WLAN_CRYPTO_KEY_TYPE_GROUP),
-					     key_index);
+					     key_index, true);
 		wma_update_set_key(adapter->vdev_id, unicast, key_index,
 				   crypto_key->cipher_type);
 	}
