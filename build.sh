@@ -5,7 +5,7 @@
 
 # Init
 KERNEL_DIR="${PWD}"
-DTB_TYPE="" # define as "single" if want use single file
+DTB_TYPE="single" # define as "single" if want use single file
 KERN_IMG="${KERNEL_DIR}"/out/arch/arm64/boot/Image.gz-dtb             # if use single file define as Image.gz-dtb instead
 KERN_DTB="${KERNEL_DIR}"/out/arch/arm64/boot/dtbo.img # and comment this variable
 ANYKERNEL="${HOME}"/anykernel
@@ -105,7 +105,8 @@ packingkernel() {
     if [[ "${DTB_TYPE}" =~ "single" ]]; then
         cp "${KERN_IMG}" "${ANYKERNEL}"/Image.gz-dtb
     else
-        cp "${KERN_IMG}" "${ANYKERNEL}"/Image.gz-dtb
+        mkdir "${ANYKERNEL}"/kernel/
+        cp "${KERN_IMG}" "${ANYKERNEL}"/kernel/Image.gz
         cp "${KERN_DTB}" "${ANYKERNEL}"/dtbo.img
     fi
 
