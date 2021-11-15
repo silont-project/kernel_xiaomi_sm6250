@@ -62,7 +62,6 @@ struct dm_verity_prefetch_work {
 struct buffer_aux {
 	int hash_verified;
 };
-
 /*
  * Initialize struct buffer_aux for a freshly created buffer.
  */
